@@ -6,7 +6,7 @@ from google.genai import types
 
 st.set_page_config(page_title="Pharma AI Prompt Generator", layout="wide")
 
-st.title("⚡ Pharma AI Prompt Generator")
+st.title("⚡ PharmaDRAFT ")
 st.write("Generate engineered AI prompts tailored for pharmaceutical regulatory tasks.")
 
 # Define models globally to prevent any name errors
@@ -14,13 +14,23 @@ MODELS_TO_TRY = ["gemini-3.1-flash-lite", "gemini-3-flash-preview"]
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-# Load database context
-filename = "ICH_India_Paracetamol_Ibuprofen-1.csv"
+# Load database context from both files
+filenames = [
+    "ICH_India_Paracetamol_Ibuprofen-1.csv",
+    "Pharmacy_Master_Reference_Compendium-All-Syllabus-Resources.csv"
+]
+
 document_database = ""
-with open(filename, mode='r', encoding='utf-8') as file:
-    reader = csv.reader(file)
-    for row in reader:
-        document_database += str(row) + "\n"
+
+# Loop through both files and combine their data
+for filename in filenames:
+    try:
+        with open(filename, mode='r', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                document_database += str(row) + "\n"
+    except Exception as e:
+        st.warning(f"Could not load {filename}: {e}")
 
 # User Inputs for Prompt Generation
 col1, col2 = st.columns(2)
@@ -33,11 +43,16 @@ with col1:
             "Quality & Stability Analysis Prompt",
             "Adverse Event & Safety Report Prompt",
             "Drug Comparison & Efficacy Prompt",
-            "Custom Regulatory Task"
+            "Custom Regulatory Task",
+            "CDSCO Compliance (India)",
+            "US FDA Regulatory Submission",
+            "EMA / EU Guidelines",
+            "ICH Quality & Safety (Q-Series)",
+            "Pharmacovigilance & Safety Audit",
+            "Clinical Trial Protocol (GCP)",
+            "Medical Affairs & Literature Review"
         ]
     )
-
-with col2:
     target_ai = st.selectbox(
         "Target AI Model:",
         ["ChatGPT (GPT-4o)", "Google Gemini", "Claude 3.5 Sonnet"]
@@ -64,12 +79,12 @@ if st.button("🚀 Generate AI Prompt"):
             Target AI: {target_ai}
             User Goal: {user_goal}
 
-            Construct a complete, structured, ready-to-use prompt using this exact structure:
-            1. **Role / Persona** (Define who the AI should act as)
-            2. **Task Definition** (Clear objective)
-            3. **Context & Reference Data** (Extracted or referenced from the provided pharma database)
-            4. **Instructions & Constraints** (Regulatory boundaries, guidelines like ICH/NLEM)
-            5. **Expected Output Format** (Tables, bullet points, executive summary layout)
+ Construct a comprehensive, production-ready, highly granular prompt using this exact structure, deeply cross-referencing all loaded pharmaceutical master compendiums, regulatory frameworks (CDSCO, US FDA, EMA, ICH), and syllabus resources:
+    1. **Role / Persona** (Define an elite, authoritative expert persona with deep domain and regulatory context)
+    2. **Task Definition** (Outline a precise, multi-step execution objective for `{task_type}` matching `{user_goal}`)
+    3. **Context & Reference Data** (Embed extracted, detailed parameters, guidelines, and comparative data from the multi-file pharma database `{document_database}`)
+    4. **Instructions & Constraints** (Enforce strict regulatory boundaries, validation steps, risk mitigation protocols, and safety guardrails like ICH/NLEM/GCP)
+    5. **Expected Output Format** (Mandate a professional delivery layout utilizing structured markdown, executive summaries, compliance matrices, and comparative data tables)
             """
 
             done = False
