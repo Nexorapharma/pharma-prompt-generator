@@ -25,7 +25,7 @@ document_database = ""
 # Loop through both files and combine their data
 for filename in filenames:
     try:
-        with open(filename, mode='r', encoding='utf-8') as file:
+        with open(filename, mode='r', encoding='latin1') as file:
             reader = csv.reader(file)
             for row in reader:
                 document_database += str(row) + "\n"
