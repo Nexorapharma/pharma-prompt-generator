@@ -14,7 +14,7 @@ MODELS_TO_TRY = ["gemini-3.1-flash-lite", "gemini-3-flash-preview"]
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-# Load database context from both files
+# Load database context efficiently
 filenames = [
     "ICH_India_Paracetamol_Ibuprofen-1.csv",
     "Pharmacy_Master_Reference_Compendium-All-Syllabus-Resources.csv"
@@ -22,16 +22,24 @@ filenames = [
 
 document_database = ""
 
-# Loop through both files and combine their data
 for filename in filenames:
     try:
         with open(filename, mode='r', encoding='latin1') as file:
             reader = csv.reader(file)
+            header = next(reader, None)  # Get column headers
+            if header:
+                document_database += f"File: {filename} | Columns: {str(header)}\n"
+            
+            # Read first 50 rows to keep token size safe and prevent server timeout
+            row_count = 0
             for row in reader:
-                document_database += str(row) + "\n"
+                if row_count < 50:
+                    document_database += str(row) + "\n"
+                    row_count += 1
+                else:
+                    break
     except Exception as e:
         st.warning(f"Could not load {filename}: {e}")
-
 # User Inputs for Prompt Generation
 col1, col2 = st.columns(2)
 
