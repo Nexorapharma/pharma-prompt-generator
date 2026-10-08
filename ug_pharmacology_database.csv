@@ -1,0 +1,19 @@
+Requested_Range,Subject,Reference Source / Organization,Target UG Subject / Area,Primary Metric / Key Requirement,Reference URL Link
+39-56,Pharmacology,DrugCentral,Pharmacology - Mechanism of Action & Indications,"Approved drugs with mechanisms, targets, indications, pharmacologic action and dosage.",https://drugcentral.org
+39-56,Pharmacology,WHO Model List of Essential Medicines,Pharmacology - Essential Medicines,Core list of essential medicines by therapeutic class and dosage form.,https://list.essentialmeds.org
+39-56,Pharmacology,WHO ATC/DDD Index (WHO Collaborating Centre),Pharmacology - Drug Classification,ATC classification codes and defined daily doses for drugs.,https://atcddd.fhi.no/atc_ddd_index/
+39-56,Pharmacology,MedlinePlus (NIH),Pharmacology - Patient-level Drug Information,"Plain-language drug information, uses, side effects and precautions.",https://medlineplus.gov
+39-56,Pharmacology,British National Formulary (BNF / NICE),"Pharmacology - Prescribing, Dosing & Interactions","UK prescribing reference with indications, doses, cautions and interactions.",https://bnf.nice.org.uk
+39-56,Pharmacology,Drugs.com Interaction Checker,Pharmacology - Drug-Drug Interactions,"Interaction checking between drugs, food and alcohol with severity levels.",https://www.drugs.com/drug_interactions.html
+39-56,Pharmacology,StatPearls (NCBI),Pharmacology - Clinical Pharmacology Reviews,Peer-reviewed clinical and pharmacology topic reviews for students and clinicians.,https://www.statpearls.com
+39-56,Pharmacology,SIDER Side Effect Resource (EMBL),Pharmacology - Adverse Drug Reactions,Marketed medicines linked to recorded adverse drug reactions and frequencies.,http://sideeffects.embl.de
+39-56,Pharmacology,US FDA - FAERS,Pharmacology - Pharmacovigilance,FDA Adverse Event Reporting System information and public data dashboard.,https://www.fda.gov/drugs/surveillance/fda-adverse-event-reporting-system-faers
+39-56,Pharmacology,Uppsala Monitoring Centre (WHO-UMC),Pharmacology - Pharmacovigilance & Causality Assessment,"Global pharmacovigilance, WHO causality assessment and VigiBase.",https://who-umc.org
+39-56,Pharmacology,VigiAccess (WHO-UMC),Pharmacology - Adverse Event Reports,Public access to reported suspected adverse effects of medicines worldwide.,https://www.vigiaccess.org
+39-56,Pharmacology,Open Targets Platform,Pharmacology - Target-Disease Evidence,Evidence linking drug targets to diseases and tractability.,https://www.opentargets.org
+39-56,Pharmacology,ClinicalTrials.gov (NIH),Pharmacology - Clinical Trial Data,"Registry of clinical studies with design, drugs, outcomes and status.",https://clinicaltrials.gov
+39-56,Pharmacology,Clinical Trials Registry - India (CTRI),Pharmacology - Indian Clinical Trials,Indian clinical trial registry maintained by ICMR.,https://ctri.nic.in
+39-56,Pharmacology,British Pharmacological Society,Pharmacology - Education & Journals,"Pharmacology teaching resources, journals and guides.",https://www.bps.ac.uk
+39-56,Pharmacology,ICH - Efficacy Guidelines (E-series),Pharmacology - Clinical Pharmacology & Trial Design,"E6 GCP, E8, E9 and related efficacy guidelines for clinical development.",https://www.ich.org/page/efficacy-guidelines
+39-56,Pharmacology,European Medicines Agency (EMA) - Medicines,Pharmacology - EU Product Information (EPAR),European public assessment reports and product information with pharmacology data.,https://www.ema.europa.eu/en/medicines
+39-56,Pharmacology,Central Drugs Standard Control Organisation (CDSCO),Regulatory Affairs - India,"Drugs & Cosmetics Act/Rules, approvals, clinical trial and import/registration requirements.",https://cdsco.gov.in
