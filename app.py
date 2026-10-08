@@ -168,7 +168,7 @@ Instructions for the generated prompt:
 
         # Call Gemini model using the stable active model identifier
         response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=meta_prompt
+            model="gemini-3.8-flash", contents=meta_prompt
         )
 
         st.success("Prompt Generated Successfully!")
