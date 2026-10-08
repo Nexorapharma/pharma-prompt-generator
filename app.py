@@ -164,17 +164,23 @@ Instructions:
 3. Output ONLY the final engineered prompt ready to be copied.
 """
 
-        # --- AUTO-FALLBACK BACKUP SYSTEM ---
+    # --- MULTI-TIER BULLETPROOF FALLBACK SYSTEM ---
         try:
+            # First attempt: Try the requested 3.8-flash model
             response = client.models.generate_content(
                 model="gemini-3.8-flash", contents=meta_prompt
             )
         except Exception:
-            # Instantly fallback to standard flash if 3.8 fails
-            response = client.models.generate_content(
-                model="gemini-1.5-flash", contents=meta_prompt
-            )
-
+            try:
+                # Backup 1: If 3.8 fails, instantly fallback to the ultra-fast 3.5-flash-lite
+                response = client.models.generate_content(
+                    model="gemini-3.5-flash-lite", contents=meta_prompt
+                )
+            except Exception:
+                # Backup 2: If both fail, use the universally stable 2.5-flash
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash", contents=meta_prompt
+                )
         st.success("Prompt Generated Successfully!")
 
         # Display output in a clean text area
