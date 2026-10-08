@@ -76,10 +76,8 @@ if audience_category == "Industry / PG / PhD":
         "Pharmacy_Master_Reference_Compendium-All-Syllabus-Resources.csv",
     ]
 elif audience_category == "People":
-    # General combined file containing pharma and YouTube references
     filenames = ["pharma_and_youtube_references.csv"]
 elif audience_category == "UG Student":
-    # Mapped directly to your updated UG specializations
     if sub_option == "Pharmaceutics":
         filenames = ["ug_pharmaceutics_database.csv"]
     elif sub_option == "Pharmaceutical Chemistry":
@@ -168,7 +166,7 @@ Instructions for the generated prompt:
 4. Output ONLY the final engineered prompt ready to be copied and used.
 """
 
-        # Call Gemini model
+        # Call Gemini model using the stable active model identifier
         response = client.models.generate_content(
             model="gemini-2.5-flash", contents=meta_prompt
         )
