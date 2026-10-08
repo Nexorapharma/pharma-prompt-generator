@@ -1,123 +1,191 @@
 import csv
-import time
-import streamlit as st
+import os
 from google import genai
-from google.genai import types
+import requests
+import streamlit as st
+from streamlit_lottie import st_lottie
+import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Pharma AI Prompt Generator", layout="wide")
+# Page Configuration
+st.set_page_config(page_title="PharmaDRAFT", page_icon="⚡", layout="centered")
 
-st.title("⚡ PharmaDRAFT ")
-st.write("Generate engineered AI prompts tailored for pharmaceutical regulatory tasks.")
 
-# Define models globally to prevent any name errors
-MODELS_TO_TRY = ["gemini-3.1-flash-lite", "gemini-3-flash-preview"]
+# Helper function to load Lottie animations from a URL
+def load_lottie_url(url):
+  try:
+    r = requests.get(url)
+    if r.status_code != 200:
+      return None
+    return r.json()
+  except Exception:
+    return None
 
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-# Load database context efficiently
-filenames = [
-    "ICH_India_Paracetamol_Ibuprofen-1.csv",
-    "Pharmacy_Master_Reference_Compendium-All-Syllabus-Resources.csv"
-]
+# Load a medical/pharmaceutical vector animation
+lottie_pharma = load_lottie_url(
+    "https://assets5.lottiefiles.com/packages/lf20_jcikwtux.json"
+)
 
+st.markdown("""
+# ⚡ PharmaDRAFT
+Generate engineered AI prompts tailored for pharmaceutical regulatory tasks.
+""")
+
+# Display the animation right under the title (if it loads successfully)
+if lottie_pharma:
+  st_lottie(lottie_pharma, height=180, key="pharma_header_anim")
+
+# Initialize Gemini Client (expects GEMINI_API_KEY in Streamlit Secrets or environment variables)
+try:
+  client = genai.Client()
+except Exception as e:
+  st.error(
+      f"Failed to initialize GenAI Client. Check your API Key in secrets. {e}"
+  )
+
+# --- NEW MULTI-TIER AUDIENCE SELECTION DROPDOWNS ---
+audience_category = st.selectbox(
+    "Select Target Audience / Category:",
+    ["People", "UG Student", "Industry / PG / PhD"]
+)
+
+sub_option = ""
+if audience_category == "People":
+    sub_option = st.selectbox(
+        "Select Exploration Level:",
+        ["Want to explore", "Detailed info"]
+    )
+elif audience_category == "UG Student":
+    sub_option = st.selectbox(
+        "Select Specialization:",
+        ["Pharmaceutics", "Pharmacology", "Regulatory affairs"]
+    )
+
+# --- DYNAMIC DATABASE SELECTION BASED ON AUDIENCE ---
+filenames = []
+
+if audience_category == "Industry / PG / PhD":
+    # Pre-existing master compendiums for Industry/PG/PhD
+    filenames = [
+        "ICH_India_Paracetamol_Ibuprofen-1.csv",
+        "Pharmacy_Master_Reference_Compendium-All-Syllabus-Resources.csv",
+    ]
+elif audience_category == "People":
+    # Dedicated database file for People (update filename when ready)
+    if sub_option == "Want to explore":
+        filenames = ["people_explore_database.csv"]
+    else:
+        filenames = ["people_detailed_database.csv"]
+elif audience_category == "UG Student":
+    # Dedicated database files for UG Students based on specialization (update filenames when ready)
+    if sub_option == "Pharmaceutics":
+        filenames = ["ug_pharmaceutics_database.csv"]
+    elif sub_option == "Pharmacology":
+        filenames = ["ug_pharmacology_database.csv"]
+    else:
+        filenames = ["ug_regulatory_affairs_database.csv"]
+
+# Load selected database context efficiently with latin1 encoding and row-capping
 document_database = ""
 
 for filename in filenames:
-    try:
-        with open(filename, mode='r', encoding='latin1') as file:
-            reader = csv.reader(file)
-            header = next(reader, None)  # Get column headers
-            if header:
-                document_database += f"File: {filename} | Columns: {str(header)}\n"
-            
-            # Read first 50 rows to keep token size safe and prevent server timeout
-            row_count = 0
-            for row in reader:
-                if row_count < 50:
-                    document_database += str(row) + "\n"
-                    row_count += 1
-                else:
-                    break
-    except Exception as e:
-        st.warning(f"Could not load {filename}: {e}")
-# User Inputs for Prompt Generation
-col1, col2 = st.columns(2)
+  try:
+    if os.path.exists(filename):
+        with open(filename, mode="r", encoding="latin1") as file:
+          reader = csv.reader(file)
+          header = next(reader, None)  # Get column headers
+          if header:
+            document_database += f"File: {filename} | Columns: {str(header)}\n"
 
-with col1:
-    task_type = st.selectbox(
-        "Select Regulatory Task:",
-        [
-            "Regulatory Compliance Check Prompt",
-            "Quality & Stability Analysis Prompt",
-            "Adverse Event & Safety Report Prompt",
-            "Drug Comparison & Efficacy Prompt",
-            "Custom Regulatory Task",
-            "CDSCO Compliance (India)",
-            "US FDA Regulatory Submission",
-            "EMA / EU Guidelines",
-            "ICH Quality & Safety (Q-Series)",
-            "Pharmacovigilance & Safety Audit",
-            "Clinical Trial Protocol (GCP)",
-            "Medical Affairs & Literature Review"
-        ]
-    )
-    target_ai = st.selectbox(
-        "Target AI Model:",
-        ["ChatGPT (GPT-4o)", "Google Gemini", "Claude 3.5 Sonnet"]
-    )
+          # Read first 50 rows to keep token size safe and prevent server timeout
+          row_count = 0
+          for row in reader:
+            if row_count < 50:
+              document_database += str(row) + "\n"
+              row_count += 1
+            else:
+              break
+    else:
+        document_database += f"Database file '{filename}' pending upload. Operating in standard mode.\n"
+  except Exception as e:
+    st.warning(f"Could not load {filename}: {e}")
+
+# User Inputs Form
+task_option = st.selectbox(
+    "Select Regulatory/Academic Task:",
+    [
+        "ICH Quality & Safety (Q-Series)",
+        "CDSCO Compliance (India)",
+        "US FDA Regulatory Submission",
+        "Clinical Trial Protocol (GCP)",
+        "Regulatory Compliance Check Prompt",
+    ],
+)
+
+model_option = st.selectbox(
+    "Target AI Model:", ["Google Gemini", "ChatGPT (GPT-4o)", "Claude 3.5 Sonnet"]
+)
 
 user_goal = st.text_area(
     "Describe what you want the generated prompt to accomplish:",
-    placeholder="E.g., Generate a prompt to analyze Paracetamol purity standards according to Indian Pharmacopoeia..."
+    placeholder=(
+        "E.g., Generate a prompt to analyze Paracetamol purity standards"
+        " according to Indian Pharmacopoeia..."
+    ),
 )
 
 if st.button("🚀 Generate AI Prompt"):
-    if user_goal:
-        with st.spinner("Engineering your custom prompt..."):
-            meta_prompt = f"""
-            You are an expert AI Prompt Engineer specializing in Pharmaceutical Regulatory Affairs.
-            
-            Your job is NOT to answer the user's task directly. 
-            Your job is to GENERATE A HIGH-QUALITY, PROFESSIONAL AI PROMPT that a regulatory specialist can copy and paste into an LLM ({target_ai}).
+  if not user_goal.strip():
+    st.warning(
+        "Please enter a description of what you want the prompt to accomplish."
+    )
+  else:
+    with st.spinner(
+        "Engineering high-rigor regulatory prompt from selected compendiums..."
+    ):
+      try:
+        # Enhanced meta-prompt template incorporating the dynamic audience track
+        meta_prompt = f"""
+You are an expert pharmaceutical regulatory affairs and academic prompt engineer. 
+Your task is to engineer a comprehensive, production-ready AI prompt for a target model ({model_option}).
 
-            Use the following CSV database as reference context for background constraints and guidelines:
-            {document_database}
+Target Audience Context: {audience_category} -> {sub_option if sub_option else 'Advanced Professional'}
+Selected Regulatory/Academic Task: {task_option}
+User Objective: {user_goal}
 
-            Task Type: {task_type}
-            Target AI: {target_ai}
-            User Goal: {user_goal}
+Reference Database Sample & Structure:
+{document_database}
 
- Construct a comprehensive, production-ready, highly granular prompt using this exact structure, deeply cross-referencing all loaded pharmaceutical master compendiums, regulatory frameworks (CDSCO, US FDA, EMA, ICH), and syllabus resources:
-    1. **Role / Persona** (Define an elite, authoritative expert persona with deep domain and regulatory context)
-    2. **Task Definition** (Outline a precise, multi-step execution objective for `{task_type}` matching `{user_goal}`)
-    3. **Context & Reference Data** (Embed extracted, detailed parameters, guidelines, and comparative data from the multi-file pharma database `{document_database}`)
-    4. **Instructions & Constraints** (Enforce strict regulatory boundaries, validation steps, risk mitigation protocols, and safety guardrails like ICH/NLEM/GCP)
-    5. **Expected Output Format** (Mandate a professional delivery layout utilizing structured markdown, executive summaries, compliance matrices, and comparative data tables)
-            """
+Instructions for the generated prompt:
+1. Force the target AI model to act as a senior pharmaceutical consultant tailored to the selected audience level.
+2. Require it to cross-reference appropriate standards including CDSCO, FDA, EMA, and ICH guidelines where applicable.
+3. Structure the output prompt with clear constraints, required outputs, compliance checkpoints, and safety guardrails.
+4. Output ONLY the final engineered prompt ready to be copied and used.
+"""
 
-            done = False
+        # Call Gemini model
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=meta_prompt
+        )
 
-            for model_name in MODELS_TO_TRY:
-                for attempt in range(3):
-                    try:
-                        response = client.models.generate_content(
-                            model=model_name,
-                            contents=meta_prompt,
-                            config=types.GenerateContentConfig(
-                                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
-                            )
-                        )
-                        st.success("Generated Prompt Ready!")
-                        st.code(response.text, language="markdown")
-                        done = True
-                        break
-                    except Exception:
-                        if attempt < 2:
-                            time.sleep(2)
-                if done:
-                    break
+        st.success("Prompt Generated Successfully!")
 
-            if not done:
-                st.error("Server busy. Please try again.")
-    else:
-        st.warning("Please describe your goal first.")
+        # Display output in a clean text area
+        st.text_area(
+            "Your Engineered Prompt:", 
+            value=response.text, 
+            height=300
+        )
+
+        # Standalone Custom Copy Button placed strictly below on the left side
+        safe_text = response.text.replace("`", "\\`").replace('"', '\\"')
+        components.html(f"""
+            <div style="display: flex; justify-content: flex-start; margin-top: 5px;">
+                <button onclick="navigator.clipboard.writeText(`{safe_text}`); alert('Prompt copied to clipboard!');" style="background-color: #FF4B4B; color: white; padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; font-family: sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                    📋 Copy Prompt
+                </button>
+            </div>
+        """, height=60)
+
+      except Exception as e:
+        st.error(f"Server busy. Please try again. Error details: {e}")
