@@ -43,7 +43,7 @@ except Exception as e:
       f"Failed to initialize GenAI Client. Check your API Key in secrets. {e}"
   )
 
-# --- NEW MULTI-TIER AUDIENCE SELECTION DROPDOWNS ---
+# --- AUDIENCE SELECTION DROPDOWNS ---
 audience_category = st.selectbox(
     "Select Target Audience / Category:",
     ["People", "UG Student", "Industry / PG / PhD"]
@@ -58,32 +58,38 @@ if audience_category == "People":
 elif audience_category == "UG Student":
     sub_option = st.selectbox(
         "Select Specialization:",
-        ["Pharmaceutics", "Pharmacology", "Regulatory affairs"]
+        [
+            "Pharmaceutics",
+            "Pharmaceutical Chemistry",
+            "Pharmacology",
+            "Regulatory Affairs",
+            "Pharmacognosy"
+        ]
     )
 
-# --- DYNAMIC DATABASE SELECTION BASED ON AUDIENCE ---
+# --- DYNAMIC DATABASE MAPPING BASED ON YOUR EXACT FILE NAMES ---
 filenames = []
 
 if audience_category == "Industry / PG / PhD":
-    # Pre-existing master compendiums for Industry/PG/PhD
     filenames = [
         "ICH_India_Paracetamol_Ibuprofen-1.csv",
         "Pharmacy_Master_Reference_Compendium-All-Syllabus-Resources.csv",
     ]
 elif audience_category == "People":
-    # Dedicated database file for People (update filename when ready)
-    if sub_option == "Want to explore":
-        filenames = ["people_explore_database.csv"]
-    else:
-        filenames = ["people_detailed_database.csv"]
+    # General combined file containing pharma and YouTube references
+    filenames = ["pharma_and_youtube_references.csv"]
 elif audience_category == "UG Student":
-    # Dedicated database files for UG Students based on specialization (update filenames when ready)
+    # Mapped directly to your updated UG specializations
     if sub_option == "Pharmaceutics":
         filenames = ["ug_pharmaceutics_database.csv"]
+    elif sub_option == "Pharmaceutical Chemistry":
+        filenames = ["ug_pharmaceutical_chemistry_database.csv"]
     elif sub_option == "Pharmacology":
         filenames = ["ug_pharmacology_database.csv"]
-    else:
+    elif sub_option == "Regulatory Affairs":
         filenames = ["ug_regulatory_affairs_database.csv"]
+    elif sub_option == "Pharmacognosy":
+        filenames = ["ug_pharmacognosy_database.csv"]
 
 # Load selected database context efficiently with latin1 encoding and row-capping
 document_database = ""
@@ -144,7 +150,6 @@ if st.button("🚀 Generate AI Prompt"):
         "Engineering high-rigor regulatory prompt from selected compendiums..."
     ):
       try:
-        # Enhanced meta-prompt template incorporating the dynamic audience track
         meta_prompt = f"""
 You are an expert pharmaceutical regulatory affairs and academic prompt engineer. 
 Your task is to engineer a comprehensive, production-ready AI prompt for a target model ({model_option}).
