@@ -9,7 +9,6 @@ import streamlit.components.v1 as components
 # Page Configuration
 st.set_page_config(page_title="PharmaDRAFT", page_icon="⚡", layout="centered")
 
-
 # Helper function to load Lottie animations from a URL
 def load_lottie_url(url):
   try:
@@ -19,7 +18,6 @@ def load_lottie_url(url):
     return r.json()
   except Exception:
     return None
-
 
 # Load a medical/pharmaceutical vector animation
 lottie_pharma = load_lottie_url(
@@ -35,13 +33,11 @@ Generate engineered AI prompts tailored for pharmaceutical regulatory tasks.
 if lottie_pharma:
   st_lottie(lottie_pharma, height=180, key="pharma_header_anim")
 
-# Initialize Gemini Client (expects GEMINI_API_KEY in Streamlit Secrets or environment variables)
+# Initialize Gemini Client
 try:
   client = genai.Client()
 except Exception as e:
-  st.error(
-      f"Failed to initialize GenAI Client. Check your API Key in secrets. {e}"
-  )
+  st.error(f"Failed to initialize GenAI Client. Check your API Key in secrets. {e}")
 
 # --- AUDIENCE SELECTION DROPDOWNS ---
 audience_category = st.selectbox(
@@ -67,7 +63,7 @@ elif audience_category == "UG Student":
         ]
     )
 
-# --- DYNAMIC DATABASE MAPPING BASED ON YOUR EXACT FILE NAMES ---
+# --- DYNAMIC DATABASE MAPPING ---
 filenames = []
 
 if audience_category == "Industry / PG / PhD":
@@ -89,35 +85,44 @@ elif audience_category == "UG Student":
     elif sub_option == "Pharmacognosy":
         filenames = ["ug_pharmacognosy_database.csv"]
 
-# Load selected database context efficiently with latin1 encoding and row-capping
-document_database = ""
 
-for filename in filenames:
-  try:
-    if os.path.exists(filename):
-        with open(filename, mode="r", encoding="latin1") as file:
-          reader = csv.reader(file)
-          header = next(reader, None)  # Get column headers
-          if header:
-            document_database += f"File: {filename} | Columns: {str(header)}\n"
-
-          # Read first 50 rows to keep token size safe and prevent server timeout
-          row_count = 0
-          for row in reader:
-            if row_count < 50:
-              document_database += str(row) + "\n"
-              row_count += 1
+# --- PERFORMANCE OPTIMIZATION: CACHE THE DATABASE LOADING ---
+# This prevents the app from re-reading the CSVs every time you click a button
+@st.cache_data
+def load_databases_fast(file_list):
+    db_text = ""
+    for filename in file_list:
+        try:
+            if os.path.exists(filename):
+                with open(filename, mode="r", encoding="latin1") as file:
+                    reader = csv.reader(file)
+                    header = next(reader, None)
+                    if header:
+                        db_text += f"File: {filename} | Columns: {str(header)}\n"
+                    
+                    # Reduced to 25 rows for much faster AI processing and lower server load
+                    row_count = 0
+                    for row in reader:
+                        if row_count < 25:
+                            db_text += str(row) + "\n"
+                            row_count += 1
+                        else:
+                            break
             else:
-              break
-    else:
-        document_database += f"Database file '{filename}' pending upload. Operating in standard mode.\n"
-  except Exception as e:
-    st.warning(f"Could not load {filename}: {e}")
+                db_text += f"Database file '{filename}' pending upload. Operating in standard mode.\n"
+        except Exception as e:
+            pass # Silently pass to avoid UI clutter on missing files
+    return db_text
 
-# User Inputs Form
+# Load the data using the high-speed cached function
+document_database = load_databases_fast(filenames)
+
+
+# --- USER INPUTS FORM ---
 task_option = st.selectbox(
     "Select Regulatory/Academic Task:",
     [
+        "Basic / Quick Pharma Prompt (Fast)",  # Added an easy, fast-loading first option
         "ICH Quality & Safety (Q-Series)",
         "CDSCO Compliance (India)",
         "US FDA Regulatory Submission",
@@ -132,44 +137,43 @@ model_option = st.selectbox(
 
 user_goal = st.text_area(
     "Describe what you want the generated prompt to accomplish:",
-    placeholder=(
-        "E.g., Generate a prompt to analyze Paracetamol purity standards"
-        " according to Indian Pharmacopoeia..."
-    ),
+    placeholder="E.g., Generate a simple prompt to explain Paracetamol uses..."
 )
 
 if st.button("🚀 Generate AI Prompt"):
   if not user_goal.strip():
-    st.warning(
-        "Please enter a description of what you want the prompt to accomplish."
-    )
+    st.warning("Please enter a description of what you want the prompt to accomplish.")
   else:
-    with st.spinner(
-        "Engineering high-rigor regulatory prompt from selected compendiums..."
-    ):
+    with st.spinner("Engineering prompt (Optimized for Speed)..."):
       try:
+        # Streamlined prompt to reduce generation time
         meta_prompt = f"""
-You are an expert pharmaceutical regulatory affairs and academic prompt engineer. 
-Your task is to engineer a comprehensive, production-ready AI prompt for a target model ({model_option}).
+You are an expert pharmaceutical prompt engineer. 
+Engineer a production-ready AI prompt for ({model_option}).
 
-Target Audience Context: {audience_category} -> {sub_option if sub_option else 'Advanced Professional'}
-Selected Regulatory/Academic Task: {task_option}
-User Objective: {user_goal}
+Audience: {audience_category} -> {sub_option if sub_option else 'Advanced'}
+Task: {task_option}
+Objective: {user_goal}
 
-Reference Database Sample & Structure:
+Reference Database:
 {document_database}
 
-Instructions for the generated prompt:
-1. Force the target AI model to act as a senior pharmaceutical consultant tailored to the selected audience level.
-2. Require it to cross-reference appropriate standards including CDSCO, FDA, EMA, and ICH guidelines where applicable.
-3. Structure the output prompt with clear constraints, required outputs, compliance checkpoints, and safety guardrails.
-4. Output ONLY the final engineered prompt ready to be copied and used.
+Instructions:
+1. Act as a pharmaceutical consultant tailored to the audience.
+2. Structure the output prompt clearly.
+3. Output ONLY the final engineered prompt ready to be copied.
 """
 
-        # Call Gemini model using the stable active model identifier
-        response = client.models.generate_content(
-            model="gemini-3.8-flash", contents=meta_prompt
-        )
+        # --- AUTO-FALLBACK BACKUP SYSTEM ---
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.8-flash", contents=meta_prompt
+            )
+        except Exception:
+            # Instantly fallback to standard flash if 3.8 fails
+            response = client.models.generate_content(
+                model="gemini-1.5-flash", contents=meta_prompt
+            )
 
         st.success("Prompt Generated Successfully!")
 
@@ -177,7 +181,7 @@ Instructions for the generated prompt:
         st.text_area(
             "Your Engineered Prompt:", 
             value=response.text, 
-            height=300
+            height=250
         )
 
         # Standalone Custom Copy Button placed strictly below on the left side
